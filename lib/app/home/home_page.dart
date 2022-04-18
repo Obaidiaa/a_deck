@@ -8,9 +8,11 @@ import 'package:a_deck/app/models/settings.dart';
 import 'package:a_deck/app/settings/setting_page.dart';
 import 'package:a_deck/app/top_level_providers.dart';
 import 'package:a_deck/routing/app_router.dart';
+import 'package:a_deck/services/data_api.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class HomePage extends StatefulWidget {
+class HomePage extends ConsumerStatefulWidget {
   const HomePage({Key? key}) : super(key: key);
   // final Settings settings;
 
@@ -22,10 +24,10 @@ class HomePage extends StatefulWidget {
   }
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  _HomePageState createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends ConsumerState<HomePage> {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -34,11 +36,23 @@ class _HomePageState extends State<HomePage> {
         title: const Text("A Deck"),
         actions: [
           ElevatedButton(
-              onPressed: () => SettingPage.show(context),
-              child: const Text('Settings'))
+              onPressed: () => ref.read(dataProvider.notifier).send(),
+              // onPressed: () => SettingPage.show(context),
+              child: const Text('Settings')),
+          const ConnectionStatus()
         ],
       ),
       body: const DeckPage(),
     ));
+  }
+}
+
+class ConnectionStatus extends ConsumerWidget {
+  const ConnectionStatus({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final count = ref.watch(webSocketConnectionStatusProvider);
+    return Text('$count');
   }
 }

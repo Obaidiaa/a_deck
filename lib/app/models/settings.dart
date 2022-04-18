@@ -4,6 +4,6 @@ class Settings {
     required this.serverPort,
   });
 
-  final String serverIp;
-  final String serverPort;
+  final String? serverIp;
+  final String? serverPort;
 }

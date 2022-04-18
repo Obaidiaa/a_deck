@@ -3,6 +3,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:a_deck/app/home/home_page.dart';
 import 'package:a_deck/app/models/settings.dart';
 import 'package:a_deck/app/settings/setting_view_model.dart';
 import 'package:a_deck/app/setup/setup_view_model.dart';
@@ -35,10 +36,10 @@ class _SetupPageState extends ConsumerState<SetupPage> {
   void initState() {
     super.initState();
     // print(setupProvider.state);
-    final loadedSetting = ref.read(setupProvider);
-    // if (loadedSetting.serverIp != null) {
-    _serverIP = loadedSetting.serverIp;
-    _serverPort = loadedSetting.serverPort;
+    // final loadedSetting = ref.read(setupViewModelProvider);
+    // // if (loadedSetting.serverIp != null) {
+    // _serverIP = loadedSetting.serverIp;
+    // _serverPort = loadedSetting.serverPort;
     // }
   }
 
@@ -130,7 +131,7 @@ class _SetupPageState extends ConsumerState<SetupPage> {
                 );
                 onSetSetting(
                     ref, _serverIPController.text, _serverPortController.text);
-                Navigator.pop(context);
+                const HomePage();
               }
             },
             child: const Text("Submit")),

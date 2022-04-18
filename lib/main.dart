@@ -29,7 +29,7 @@ class MyApp extends ConsumerWidget {
       home: Consumer(
         builder: (context, ref, child) {
           final settingLoaded = ref.watch(sharedPreferencesServiceProvider);
-          return settingLoaded.getSettings().serverIp != ""
+          return settingLoaded.serverIp != ""
               ? const HomePage()
               : const SetupPage();
         },

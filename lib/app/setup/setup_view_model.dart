@@ -8,28 +8,22 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 final setupViewModelProvider = Provider((ref) {
   final sharedPreferencesService = ref.watch(sharedPreferencesServiceProvider);
-  return SetupViewModel(sharedPreferencesService);
+  return SetupViewModel(sharedPreferencesService, ref);
 });
 
-final setupProvider = Provider.autoDispose<Settings>((ref) {
-  final sharedPreferencesService = ref.watch(sharedPreferencesServiceProvider);
-  return sharedPreferencesService.getSettings();
-});
+// final setupProvider = StateNotifierProvider<SetupViewModel, Settings>((ref) {
+//   final settings = ref.watch(settingsDataProvider);
+//   return settings;
+// });
 
 class SetupViewModel extends StateNotifier<Settings> {
-  final SharedPreferencesService sharedPreferencesService;
-
-  SetupViewModel(this.sharedPreferencesService)
-      : super(Settings(serverIp: "", serverPort: "")) {
-    getSettings();
-  }
-
-  void getSettings() {
-    state = sharedPreferencesService.getSettings();
-  }
+  final Settings settings;
+  final Ref ref;
+  SetupViewModel(this.settings, this.ref)
+      : super(Settings(serverIp: "", serverPort: ""));
 
   void setSettings(ip, port) {
-    sharedPreferencesService.setSettings(ip, port);
+    ref.read(sharedPreferencesServiceProvider.notifier).setSettings(ip, port);
     state = Settings(serverIp: ip, serverPort: port);
   }
 }

@@ -8,20 +8,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 final settingsViewModelProvider = Provider((ref) {
-  final sharedPreferencesService = ref.watch(sharedPreferencesServiceProvider);
-  return SettingViewModel(
-      sharedPreferencesService: sharedPreferencesService, ref: ref);
+  final settings = ref.watch(sharedPreferencesServiceProvider);
+  return SettingViewModel(settings: settings, ref: ref);
 });
 
 final settingsProvider = Provider.autoDispose<Settings>((ref) {
-  final sharedPreferencesService = ref.watch(sharedPreferencesServiceProvider);
-  return sharedPreferencesService.getSettings();
+  final settings = ref.watch(sharedPreferencesServiceProvider);
+  return settings;
 });
 
 class SettingViewModel extends StateNotifier<Settings> {
-  final SharedPreferencesService sharedPreferencesService;
+  final Settings settings;
   final ProviderRef ref;
-  SettingViewModel({required this.sharedPreferencesService, required this.ref})
+  SettingViewModel({required this.settings, required this.ref})
       : super(Settings(serverIp: "", serverPort: "")) {
     // getSettings();
   }
@@ -31,14 +30,14 @@ class SettingViewModel extends StateNotifier<Settings> {
   // }
 
   setSettings(ip, port) {
-    sharedPreferencesService.setSettings(ip, port);
+    ref.read(sharedPreferencesServiceProvider.notifier).setSettings(ip, port);
     // ref.refresh(settingsProvider);
-    ref.refresh(deckCommandProvider);
+    // ref.refresh(deckCommandProvider);
     // state = Settings(serverIp: ip, serverPort: port);
   }
 
   deleteSetting() {
-    sharedPreferencesService.deleteSettings();
+    ref.read(sharedPreferencesServiceProvider.notifier).deleteSettings();
     // ref.refresh(settingsProvider);
   }
 }

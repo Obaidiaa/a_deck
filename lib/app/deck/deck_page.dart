@@ -1,5 +1,8 @@
 // deck page showing all commands
 
+import 'dart:convert';
+import 'dart:ui';
+
 import 'package:a_deck/app/deck/deck_view_model.dart';
 import 'package:a_deck/app/models/command.dart';
 import 'package:a_deck/app/models/settings.dart';
@@ -55,18 +58,37 @@ class DeckDisplay extends ConsumerWidget {
                       itemBuilder: (BuildContext context, int index) {
                         return Card(
                           child: InkWell(
-                            onTap: () => print("${data[index].id}"),
-                            child: Image.network(data[index].picture),
+                            onTap: () =>
+                                ref.read(dataProvider.notifier).startClient(),
+                            child: StreamBuilder(
+                              stream: ref
+                                  .read(dataProvider.notifier)
+                                  .getImageById(data[index].id!),
+                              builder: (BuildContext context,
+                                  AsyncSnapshot snapshot) {
+                                if (snapshot.hasData) {
+                                  try {
+                                    return Image.memory(snapshot.data);
+                                  } catch (e) {
+                                    return const Icon(
+                                        Icons.no_photography_rounded);
+                                  }
+                                }
+                                return const SizedBox(
+                                    child: Center(
+                                        child: CircularProgressIndicator()));
+                              },
+                            ),
                           ),
                         );
                       },
                     ),
                 error: (error, trace) => Text(error.toString()),
                 loading: () => const SizedBox(
-                      child: Center(child: CircularProgressIndicator()),
+                      child: Center(child: Text('loading')),
                     ))),
         ElevatedButton(
-          onPressed: () => onAdd(ref),
+          onPressed: () {},
           child: const Text('re'),
         )
       ],

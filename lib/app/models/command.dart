@@ -1,5 +1,3 @@
-// data model for deck command
-
 class Command {
   Command({
     required this.id,
@@ -8,8 +6,17 @@ class Command {
     required this.picture,
   });
 
-  final String id;
-  final String name;
-  final String command;
-  final String picture;
+  String? id;
+  String? name;
+  String? command;
+  String? picture;
+
+  Command.fromJson(Map<String, dynamic> json)
+      : id = json['id'],
+        name = json['name'],
+        command = json['command'],
+        picture = json['picture'];
+
+  Map<String, dynamic> toJson() =>
+      {'id': id, 'name': name, 'command': command, 'picture': picture};
 }

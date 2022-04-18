@@ -5,15 +5,24 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 final sharedPreferencesServiceProvider =
-    Provider<SharedPreferencesService>((ref) => throw UnimplementedError());
+    StateNotifierProvider<SharedPreferencesService, Settings>(
+        (ref) => throw UnimplementedError());
 
-class SharedPreferencesService {
+// final settingsDataProvider =
+//     StateNotifierProvider<SharedPreferencesService, Settings>(
+//         (ref) => throw UnimplementedError());
+
+class SharedPreferencesService extends StateNotifier<Settings> {
   // late final SharedPreferences sharedPreferences;
 
-  SharedPreferencesService(this.sharedPreferences);
+  SharedPreferencesService(this.sharedPreferences)
+      : super(Settings(serverIp: '', serverPort: '')) {
+    getSettings();
+  }
 
   final SharedPreferences sharedPreferences;
 
+  Settings? settings;
 // server ip sharedPref
   static const serverIp = 'serverIp';
 // server port shardPref
@@ -22,16 +31,19 @@ class SharedPreferencesService {
   setSettings(String ip, String port) async {
     await sharedPreferences.setString(serverIp, ip);
     await sharedPreferences.setString(serverPort, port);
+    state = Settings(serverIp: ip, serverPort: port);
   }
 
-  Settings getSettings() {
+  void getSettings() {
     final serverIpPref = sharedPreferences.getString(serverIp) ?? "";
     final serverPortPref = sharedPreferences.getString(serverPort) ?? "0000";
-    return Settings(serverIp: serverIpPref, serverPort: serverPortPref);
+    state = Settings(serverIp: serverIpPref, serverPort: serverPortPref);
+    // return Settings(serverIp: serverIpPref, serverPort: serverPortPref);
   }
 
   void deleteSettings() {
     sharedPreferences.remove(serverIp);
     sharedPreferences.remove(serverPort);
+    state = Settings(serverIp: '', serverPort: '');
   }
 }
