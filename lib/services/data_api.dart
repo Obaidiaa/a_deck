@@ -15,6 +15,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:web_socket_channel/io.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
+
 // final dataApiProvider = Provider.autoDispose<DataApi>((ref) {
 //   final settings = ref.watch(sharedPreferencesServiceProvider);
 //   return DataApi(settings: settings.getSettings());
@@ -59,12 +60,14 @@ class DataApi extends StateNotifier<List<Command>> {
   List data = [];
 
   void startClient() async {
+    print(settings.serverIp);
     // var commandsJson = jsonEncode(d.map((e) => e.toJson()).toList());
     // print(commandsJson);
     if (isWebsocketRunning) return; //check if its already running
     // const url = 'wss://192.168.100.191:7777';
     // connect to the socket server
-    socket = await Socket.connect('192.168.100.191', 7777);
+    socket = await Socket.connect(
+        settings.serverIp, int.parse(settings.serverPort!));
 
     print('Connected to: ${socket.remoteAddress.address}:${socket.remotePort}');
     ref
@@ -118,12 +121,19 @@ class DataApi extends StateNotifier<List<Command>> {
   }
 
   Stream<dynamic> getImageById(String imageID) {
-    WebSocketChannel _btcWebsocket = WebSocketChannel.connect(
-      Uri.parse('ws://192.168.100.191:8888'),
+    final server = 'ws://' +
+        settings.serverIp! +
+        ':' +
+        (int.parse(settings.serverPort!) + 1).toString() +
+        '';
+    print(server);
+    WebSocketChannel socket = WebSocketChannel.connect(
+      Uri.parse(server),
     );
-    _btcWebsocket.sink
+    socket.sink
         .add(json.encode({'command': 'getImage', 'parameters': imageID}));
-    return _btcWebsocket.stream;
+    socket.stream.map(toIntList2);
+    return socket.stream;
   }
 
   Future re2(Stream<dynamic> socket) async {
@@ -156,7 +166,7 @@ class DataApi extends StateNotifier<List<Command>> {
   }
 
   List<int> toIntList2(dynamic source) {
-    print(source);
+    print('dadadadda $source');
     return List.from(source);
   }
 

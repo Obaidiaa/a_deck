@@ -36,8 +36,8 @@ class _HomePageState extends ConsumerState<HomePage> {
         title: const Text("A Deck"),
         actions: [
           ElevatedButton(
-              onPressed: () => ref.read(dataProvider.notifier).send(),
-              // onPressed: () => SettingPage.show(context),
+              // onPressed: () => ref.read(dataProvider.notifier).send(),
+              onPressed: () => SettingPage.show(context),
               child: const Text('Settings')),
           const ConnectionStatus()
         ],

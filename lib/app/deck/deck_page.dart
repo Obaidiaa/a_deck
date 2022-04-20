@@ -38,7 +38,6 @@ class _DeckPageState extends ConsumerState<DeckPage> {
 
 class DeckDisplay extends ConsumerWidget {
   const DeckDisplay({Key? key}) : super(key: key);
-
   onAdd(WidgetRef ref) {
     ref.read(deckViewModelProvider).addCommand();
   }
