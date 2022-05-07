@@ -1,8 +1,5 @@
 import 'package:a_deck/app/home/home_page.dart';
-import 'package:a_deck/app/settings/setting_page.dart';
-import 'package:a_deck/app/settings/setting_view_model.dart';
 import 'package:a_deck/app/setup/setup_page.dart';
-import 'package:a_deck/app/top_level_providers.dart';
 import 'package:a_deck/routing/app_router.dart';
 import 'package:a_deck/services/shared_preferences_service.dart';
 import 'package:flutter/material.dart';
@@ -26,6 +23,8 @@ class MyApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
+      darkTheme: ThemeData.dark(),
+      themeMode: ThemeMode.dark,
       home: Consumer(
         builder: (context, ref, child) {
           final settingLoaded = ref.watch(sharedPreferencesServiceProvider);

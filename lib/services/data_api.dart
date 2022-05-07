@@ -3,23 +3,14 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:a_deck/app/models/command.dart';
 import 'package:a_deck/app/models/settings.dart';
 import 'package:a_deck/services/shared_preferences_service.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:path_provider/path_provider.dart';
-import 'package:web_socket_channel/io.dart';
-import 'package:web_socket_channel/web_socket_channel.dart';
-
-// final dataApiProvider = Provider.autoDispose<DataApi>((ref) {
-//   final settings = ref.watch(sharedPreferencesServiceProvider);
-//   return DataApi(settings: settings.getSettings());
-// });
 
 final dataProvider = StateNotifierProvider<DataApi, List<Command>>((ref) {
   final settings = ref.watch(sharedPreferencesServiceProvider);
@@ -32,12 +23,7 @@ final webSocketConnectionStatusProvider =
 }));
 
 class WebSocketConnectionStatus extends StateNotifier<bool> {
-  WebSocketConnectionStatus(bool state) : super(state) {
-    // Future.delayed(const Duration(milliseconds: 2000), () async {
-    //   // state = d;
-    //   setConnectionStatus(true);
-    // });
-  }
+  WebSocketConnectionStatus(bool state) : super(state);
 
   @override
   bool get state => super.state;
@@ -60,27 +46,29 @@ class DataApi extends StateNotifier<List<Command>> {
   List data = [];
 
   void startClient() async {
-    print(settings.serverIp);
-    // var commandsJson = jsonEncode(d.map((e) => e.toJson()).toList());
-    // print(commandsJson);
-    if (isWebsocketRunning) return; //check if its already running
-    // const url = 'wss://192.168.100.191:7777';
-    // connect to the socket server
+    if (isWebsocketRunning) return;
     socket = await Socket.connect(
         settings.serverIp, int.parse(settings.serverPort!));
+    // socket2 = await Socket.connect(
+    //     settings.serverIp, int.parse(settings.serverPort!) + 1);
 
-    print('Connected to: ${socket.remoteAddress.address}:${socket.remotePort}');
+    if (kDebugMode) {
+      print(
+          'Connected to: ${socket.remoteAddress.address}:${socket.remotePort}');
+    }
     ref
         .read(webSocketConnectionStatusProvider.notifier)
         .setConnectionStatus(true);
     isWebsocketRunning = true;
-    send();
+    sendCommand('getCommandsList', '');
     // listen for responses from the server
     socket.listen(
       // handle data from the server
       (Uint8List data) async {
         final serverResponse = String.fromCharCodes(data);
-        print(serverResponse);
+        if (kDebugMode) {
+          print(serverResponse);
+        }
 
         try {
           final List<dynamic> json = jsonDecode(serverResponse);
@@ -90,7 +78,9 @@ class DataApi extends StateNotifier<List<Command>> {
         } catch (e) {
           state = [];
         }
-        print('Server: $serverResponse');
+        if (kDebugMode) {
+          print('Server: $serverResponse');
+        }
       },
 
       // handle errors
@@ -99,7 +89,6 @@ class DataApi extends StateNotifier<List<Command>> {
         ref
             .read(webSocketConnectionStatusProvider.notifier)
             .setConnectionStatus(false);
-        print('errrrorr $error');
         socket.destroy();
         if (retryLimit != 0) {
           startClient();
@@ -113,104 +102,79 @@ class DataApi extends StateNotifier<List<Command>> {
         ref
             .read(webSocketConnectionStatusProvider.notifier)
             .setConnectionStatus(false);
-        print('Server left.');
+        if (kDebugMode) {
+          print('Server left.');
+        }
         socket.destroy();
         startClient();
       },
     );
   }
 
-  Stream<dynamic> getImageById(String imageID) {
-    final server = 'ws://' +
-        settings.serverIp! +
-        ':' +
-        (int.parse(settings.serverPort!) + 1).toString() +
-        '';
-    print(server);
-    WebSocketChannel socket = WebSocketChannel.connect(
-      Uri.parse(server),
-    );
-    socket.sink
-        .add(json.encode({'command': 'getImage', 'parameters': imageID}));
-    socket.stream.map(toIntList2);
-    return socket.stream;
-  }
-
-  Future re2(Stream<dynamic> socket) async {
-    Directory tempDir = await getTemporaryDirectory();
-    String tempPath = tempDir.path;
-    var file = File(tempPath + '/tempimage.png').openWrite();
-    // var file = File('tempimage').openWrite();
-    try {
-      await socket.map(toIntList2).pipe(file);
-    } finally {
-      file.close();
-      print(
-          'Done 2 File downloaded ${File(tempPath + '/tempimage.png').path} ${await File(tempPath + '/tempimage.png').length()}');
-      String filePath = File(tempPath + '/1').path;
-      String fileName = filePath.split('/').last;
-
-      state = [
-        for (final command in state)
-          if (command.id == fileName)
-            Command(
-                id: command.id,
-                name: command.name,
-                command: command.command,
-                picture: filePath)
-          else
-            command
-      ];
-      print(jsonEncode(state));
+  Future getImageById(String imageID) async {
+    Socket _socket = await Socket.connect(
+        settings.serverIp, int.parse(settings.serverPort!) + 1);
+    if (kDebugMode) {
+      print('${socket.remoteAddress}  ${socket.remotePort}');
     }
+
+    _socket.write(json.encode({'command': 'getImage', 'parameters': imageID}));
+
+    final Directory? directory = await getExternalStorageDirectory();
+    final file = File('${directory!.path}/$imageID');
+
+    final List<int> _bytes = [];
+    int _received = 0;
+
+    _socket.listen((event) async {
+      _bytes.addAll(event);
+      _received += event.length;
+      await file.writeAsBytes(_bytes);
+      if (kDebugMode) {
+        print(_received);
+      }
+    });
+
+    if (kDebugMode) {
+      print('Recevied data $_received ${file.path}');
+    }
+    return file.path;
   }
 
-  List<int> toIntList2(dynamic source) {
-    print('dadadadda $source');
-    return List.from(source);
+  Future<File> writeFile(String imageID, Stream stream) async {
+    final Directory? directory = await getExternalStorageDirectory();
+    final List<int> _bytes = [];
+    int _received = 0;
+
+    // try {
+    stream.listen((event) {
+      _bytes.addAll(event);
+      _received += event.length as int;
+    }).onDone(() async {
+      final file = File('${directory!.path}/$imageID');
+      if (kDebugMode) {
+        print('$_received   ============   ${_bytes.length}');
+      }
+      await file.writeAsBytes(_bytes);
+      if (kDebugMode) {
+        print('Recevied data $_received ${file.path}');
+      }
+    });
+    return File('${directory!.path}/$imageID');
   }
 
-  List<Command>? listCommands;
-  final List<Command> d = [
-    Command(
-        id: "1",
-        name: "Discord",
-        command: "C:/discord.exe",
-        picture:
-            "https://assets.mofoprod.net/network/images/discord.original.jpg"),
-    Command(
-        id: "2",
-        name: "chrome",
-        command: "C:/chrome.exe",
-        picture:
-            "https://upload.wikimedia.org/wikipedia/commons/thumb/archive/a/a5/20160124180756%21Google_Chrome_icon_%28September_2014%29.svg/120px-Google_Chrome_icon_%28September_2014%29.svg.png"),
-  ];
   @override
   List<Command> get state => super.state;
 
-  List<int> toIntList(Uint8List source) {
-    // print(source);
-    return List.from(source);
-  }
-
-  void send() {
+  void sendCommand(String command, String parameters) {
     sendMessage(
-        socket, json.encode({'command': 'getCommandsList', 'parameters': ''}));
+        socket, json.encode({'command': command, 'parameters': parameters}));
   }
 
   Future<void> sendMessage(Socket socket, String message) async {
-    print('Client: $message');
+    if (kDebugMode) {
+      print('Client: $message');
+    }
     socket.write(message);
-    await Future.delayed(Duration(seconds: 2));
-  }
-
-  apiGetCommands() {
-    return Future.delayed(const Duration(milliseconds: 2000), () async {
-      // state = d;
-    });
-  }
-
-  getImage(String id) {
-    return socket.write('{"getImage" : "1"}');
   }
 }

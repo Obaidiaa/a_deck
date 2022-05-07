@@ -57,17 +57,19 @@ class _SettingPageState extends ConsumerState<SettingPage> {
     return SafeArea(
       child: Scaffold(
         appBar: AppBar(title: const Text("Settings")),
-        body: Center(
-          child: Padding(
-            padding: const EdgeInsets.only(top: 25.0),
-            child: Column(
-              children: [
-                const Text(
-                  'Server Settings',
-                  style: TextStyle(fontSize: 46),
-                ),
-                _buildContents(),
-              ],
+        body: SingleChildScrollView(
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.only(top: 25.0),
+              child: Column(
+                children: [
+                  const Text(
+                    'Server Settings',
+                    style: TextStyle(fontSize: 46),
+                  ),
+                  _buildContents(),
+                ],
+              ),
             ),
           ),
         ),

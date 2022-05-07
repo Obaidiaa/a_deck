@@ -1,35 +1,29 @@
 import 'package:a_deck/app/models/command.dart';
-import 'package:a_deck/app/models/settings.dart';
-import 'package:a_deck/app/top_level_providers.dart';
 import 'package:a_deck/services/data_api.dart';
-import 'package:a_deck/services/shared_preferences_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-final deckCommandProvider = FutureProvider.autoDispose<List<Command>>((ref) {
+final deckCommandProvider = FutureProvider<List<Command>>((ref) async {
   final commandsList = ref.watch(dataProvider);
+  final _dataApi = ref.watch(dataProvider.notifier);
+
+  //get Images from The Desktop application
+  for (var i = 0; i < commandsList.length; i++) {
+    commandsList[i].picture = await _dataApi.getImageById(commandsList[i].id!);
+  }
   return commandsList;
 });
 
 final deckViewModelProvider = Provider((ref) {
-  final List<Command> commands = ref.watch(dataProvider);
-  return DeckViewModel(commandsList: commands, ref: ref);
+  final _dataApi = ref.watch(dataProvider.notifier);
+  return DeckViewModel(dataApi: _dataApi);
 });
 
-class DeckViewModel extends StateNotifier<List<Command>> {
-  DeckViewModel({required this.commandsList, required this.ref})
-      : super(commandsList ?? []);
-  List<Command>? commandsList;
-  final ProviderRef ref;
-  getCommands() {
-    // state = await dataApi.apiGetCommands();
-    state = commandsList!;
-    // ref.refresh(deckCommandProvider);
-    // return dataApi.apiGetCommands();
-  }
+class DeckViewModel extends StateNotifier {
+  DeckViewModel({required this.dataApi}) : super(null);
 
-  addCommand() {
-    // print(dataApi.listCommand.length);
-    state = commandsList!;
-    // ref.refresh(deckCommandProvider);
+  final DataApi dataApi;
+
+  sendCommand(String id) {
+    dataApi.sendCommand('StartApplication', id);
   }
 }

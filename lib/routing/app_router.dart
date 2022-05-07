@@ -43,7 +43,6 @@ class AppRouter {
           fullscreenDialog: true,
         );
       default:
-        // TODO: Throw
         return null;
     }
   }

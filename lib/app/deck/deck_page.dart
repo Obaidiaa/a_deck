@@ -1,17 +1,11 @@
 // deck page showing all commands
 
-import 'dart:convert';
-import 'dart:ui';
+import 'dart:io';
 
 import 'package:a_deck/app/deck/deck_view_model.dart';
-import 'package:a_deck/app/models/command.dart';
 import 'package:a_deck/app/models/settings.dart';
-import 'package:a_deck/app/settings/setting_page.dart';
-import 'package:a_deck/app/settings/setting_view_model.dart';
-import 'package:a_deck/app/top_level_providers.dart';
 import 'package:a_deck/routing/app_router.dart';
-import 'package:a_deck/services/data_api.dart';
-import 'package:a_deck/services/shared_preferences_service.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -38,12 +32,14 @@ class _DeckPageState extends ConsumerState<DeckPage> {
 
 class DeckDisplay extends ConsumerWidget {
   const DeckDisplay({Key? key}) : super(key: key);
-  onAdd(WidgetRef ref) {
-    ref.read(deckViewModelProvider).addCommand();
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final deckProvider = ref.read(deckViewModelProvider);
+    imageCache!.clear();
+    imageCache!.clearLiveImages();
+    if (kDebugMode) {
+      print('rebuild');
+    }
     return Column(
       children: [
         Expanded(
@@ -55,30 +51,18 @@ class DeckDisplay extends ConsumerWidget {
                       ),
                       itemCount: data.length,
                       itemBuilder: (BuildContext context, int index) {
+                        if (kDebugMode) {
+                          print(data[index].picture);
+                        }
                         return Card(
                           child: InkWell(
-                            onTap: () =>
-                                ref.read(dataProvider.notifier).startClient(),
-                            child: StreamBuilder(
-                              stream: ref
-                                  .read(dataProvider.notifier)
-                                  .getImageById(data[index].id!),
-                              builder: (BuildContext context,
-                                  AsyncSnapshot snapshot) {
-                                if (snapshot.hasData) {
-                                  try {
-                                    return Image.memory(snapshot.data);
-                                  } catch (e) {
-                                    return const Icon(
-                                        Icons.no_photography_rounded);
-                                  }
-                                }
-                                return const SizedBox(
-                                    child: Center(
-                                        child: CircularProgressIndicator()));
-                              },
-                            ),
-                          ),
+                              onTap: () =>
+                                  deckProvider.sendCommand(data[index].id!),
+                              child: Image(
+                                image: FileImage(
+                                  File(data[index].picture!),
+                                ),
+                              )),
                         );
                       },
                     ),
