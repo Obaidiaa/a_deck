@@ -10,7 +10,6 @@ import 'package:a_deck/app/models/settings.dart';
 import 'package:a_deck/services/shared_preferences_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:path_provider/path_provider.dart';
 
 final dataProvider = StateNotifierProvider<DataApi, List<Command>>((ref) {
   final settings = ref.watch(sharedPreferencesServiceProvider);
@@ -49,9 +48,6 @@ class DataApi extends StateNotifier<List<Command>> {
     if (isWebsocketRunning) return;
     socket = await Socket.connect(
         settings.serverIp, int.parse(settings.serverPort!));
-    // socket2 = await Socket.connect(
-    //     settings.serverIp, int.parse(settings.serverPort!) + 1);
-
     if (kDebugMode) {
       print(
           'Connected to: ${socket.remoteAddress.address}:${socket.remotePort}');
@@ -109,58 +105,6 @@ class DataApi extends StateNotifier<List<Command>> {
         startClient();
       },
     );
-  }
-
-  Future getImageById(String imageID) async {
-    Socket _socket = await Socket.connect(
-        settings.serverIp, int.parse(settings.serverPort!) + 1);
-    if (kDebugMode) {
-      print('${socket.remoteAddress}  ${socket.remotePort}');
-    }
-
-    _socket.write(json.encode({'command': 'getImage', 'parameters': imageID}));
-
-    final Directory? directory = await getExternalStorageDirectory();
-    final file = File('${directory!.path}/$imageID');
-
-    final List<int> _bytes = [];
-    int _received = 0;
-
-    _socket.listen((event) async {
-      _bytes.addAll(event);
-      _received += event.length;
-      await file.writeAsBytes(_bytes);
-      if (kDebugMode) {
-        print(_received);
-      }
-    });
-
-    if (kDebugMode) {
-      print('Recevied data $_received ${file.path}');
-    }
-    return file.path;
-  }
-
-  Future<File> writeFile(String imageID, Stream stream) async {
-    final Directory? directory = await getExternalStorageDirectory();
-    final List<int> _bytes = [];
-    int _received = 0;
-
-    // try {
-    stream.listen((event) {
-      _bytes.addAll(event);
-      _received += event.length as int;
-    }).onDone(() async {
-      final file = File('${directory!.path}/$imageID');
-      if (kDebugMode) {
-        print('$_received   ============   ${_bytes.length}');
-      }
-      await file.writeAsBytes(_bytes);
-      if (kDebugMode) {
-        print('Recevied data $_received ${file.path}');
-      }
-    });
-    return File('${directory!.path}/$imageID');
   }
 
   @override

@@ -31,11 +31,16 @@ class _HomePageState extends ConsumerState<HomePage> {
       appBar: AppBar(
         title: const Text("A Deck"),
         actions: [
-          ElevatedButton(
-              // onPressed: () => ref.read(dataProvider.notifier).send(),
-              onPressed: () => SettingPage.show(context),
-              child: const Text('Settings')),
-          const ConnectionStatus()
+          InkWell(
+              onTap: () => SettingPage.show(context),
+              child: const Padding(
+                padding: EdgeInsets.all(8.0),
+                child: Icon(Icons.settings),
+              )),
+          const Padding(
+            padding: EdgeInsets.all(8.0),
+            child: ConnectionStatus(),
+          )
         ],
       ),
       body: const DeckPage(),
@@ -48,7 +53,19 @@ class ConnectionStatus extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final count = ref.watch(webSocketConnectionStatusProvider);
-    return Text('$count');
+    final connected = ref.watch(webSocketConnectionStatusProvider);
+    if (connected) {
+      return const Icon(Icons.wifi);
+    } else {
+      return InkWell(
+        onTap: () => ref.refresh(dataProvider),
+        child: Row(
+          children: const [
+            Icon(Icons.wifi_off),
+            Text('Reconnect'),
+          ],
+        ),
+      );
+    }
   }
 }

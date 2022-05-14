@@ -1,10 +1,9 @@
 // deck page showing all commands
 
-import 'dart:io';
-
 import 'package:a_deck/app/deck/deck_view_model.dart';
 import 'package:a_deck/app/models/settings.dart';
 import 'package:a_deck/routing/app_router.dart';
+import 'package:a_deck/services/data_api.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -40,41 +39,43 @@ class DeckDisplay extends ConsumerWidget {
     if (kDebugMode) {
       print('rebuild');
     }
-    return Column(
-      children: [
-        Expanded(
-            child: ref.watch(deckCommandProvider).when(
-                data: (data) => GridView.builder(
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                      ),
-                      itemCount: data.length,
-                      itemBuilder: (BuildContext context, int index) {
-                        if (kDebugMode) {
-                          print(data[index].picture);
-                        }
-                        return Card(
-                          child: InkWell(
+    return RefreshIndicator(
+      onRefresh: () async => Future.delayed(const Duration(seconds: 1))
+          .then((value) => ref.refresh(dataProvider)),
+      child: Column(
+        children: [
+          Expanded(
+              child: ref.watch(deckCommandProvider).when(
+                  data: (data) => GridView.builder(
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                        ),
+                        itemCount: data.length,
+                        itemBuilder: (BuildContext context, int index) {
+                          if (kDebugMode) {
+                            print(data[index].picture);
+                          }
+                          return Card(
+                            child: InkWell(
                               onTap: () =>
                                   deckProvider.sendCommand(data[index].id!),
                               child: Image(
-                                image: FileImage(
-                                  File(data[index].picture!),
+                                image: NetworkImage(
+                                  Uri.http('10.71.1.247:8889', 'getImage',
+                                      {'ImageID': data[index].id}).toString(),
                                 ),
-                              )),
-                        );
-                      },
-                    ),
-                error: (error, trace) => Text(error.toString()),
-                loading: () => const SizedBox(
-                      child: Center(child: Text('loading')),
-                    ))),
-        ElevatedButton(
-          onPressed: () {},
-          child: const Text('re'),
-        )
-      ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                  error: (error, trace) => Text(error.toString()),
+                  loading: () => const SizedBox(
+                        child: Center(child: Text('loading')),
+                      ))),
+        ],
+      ),
     );
   }
 }
