@@ -1,16 +1,9 @@
-# a_deck
+# a_deck mobile application
 
-A new Flutter project.
+software version of stream deck.
 
-## Getting Started
+it required server application https://github.com/Obaidiaa/a_deck_desktop 
 
-This project is a starting point for a Flutter application.
+![Screenshot_1653323850](https://user-images.githubusercontent.com/78088910/169867158-3e6b84cc-dcec-4659-8419-b53d78b9f118.png)
 
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://flutter.dev/docs/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://flutter.dev/docs/cookbook)
-
-For help getting started with Flutter, view our
-[online documentation](https://flutter.dev/docs), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+...
