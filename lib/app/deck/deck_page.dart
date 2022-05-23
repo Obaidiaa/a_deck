@@ -4,6 +4,7 @@ import 'package:a_deck/app/deck/deck_view_model.dart';
 import 'package:a_deck/app/models/settings.dart';
 import 'package:a_deck/routing/app_router.dart';
 import 'package:a_deck/services/data_api.dart';
+import 'package:a_deck/services/shared_preferences_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -34,6 +35,7 @@ class DeckDisplay extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final deckProvider = ref.read(deckViewModelProvider);
+    final settings = ref.watch(sharedPreferencesServiceProvider);
     imageCache!.clear();
     imageCache!.clearLiveImages();
     if (kDebugMode) {
@@ -55,6 +57,7 @@ class DeckDisplay extends ConsumerWidget {
                         itemBuilder: (BuildContext context, int index) {
                           if (kDebugMode) {
                             print(data[index].picture);
+                            print(settings.serverIp);
                           }
                           return Card(
                             child: InkWell(
@@ -62,7 +65,9 @@ class DeckDisplay extends ConsumerWidget {
                                   deckProvider.sendCommand(data[index].id!),
                               child: Image(
                                 image: NetworkImage(
-                                  Uri.http('10.71.1.247:8889', 'getImage',
+                                  Uri.http(
+                                      '${settings.serverIp}:${int.parse(settings.serverPort!) + 1}',
+                                      'getImage',
                                       {'ImageID': data[index].id}).toString(),
                                 ),
                               ),
